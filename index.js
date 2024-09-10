@@ -1,7 +1,8 @@
 const express = require("express");
 const multer = require("multer");
 const { v4: uuid } = require("uuid");
-const fs = require("node:fs");
+const fs = require("fs");
+const mysql = require("mysql");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -31,12 +32,31 @@ app.post(
       return res.status(400).json({ message: "ain't no files provided" });
     }
 
+    const conn = mysql.createConnection({
+      host: "localhost",
+      user: "root",
+      password: "",
+      database: "test",
+    });
+
     const filePaths = {};
 
     for (const fieldName in req.files) {
       const file = req.files[fieldName][0];
       filePaths[fieldName] = file.path;
     }
+
+    conn.createQuery(
+      "INSERT INTO upload_files (file1, file2, file3) VALUES (?, ?, ?);",
+      [filePaths["file1"], filePaths["file2"], filePaths["file3"]],
+      function (errors, results, fields) {
+        console.log(errors);
+        console.log(results);
+        console.log(fields);
+      }
+    );
+
+    conn.end();
 
     return res.json({
       message: "success",
